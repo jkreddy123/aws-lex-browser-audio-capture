@@ -106,7 +106,18 @@
       var myBlob = new Blob([buffer]);
       var audio = document.createElement('audio');
       var objectUrl = window.URL.createObjectURL(myBlob);
+      var link = document.createElement('a');
+      var li = document.createElement('li');
+
       audio.src = objectUrl;
+      audio.controls = true;
+      link.href = objectUrl;
+      link.download = new Date().toISOString() + '.wav';
+      link.innerHTML = link.download;
+      li.appendChild(audio);
+      li.appendChild(link);
+      recordingsList.appendChild(li);
+
       audio.addEventListener('ended', function () {
         audio.currentTime = 0;
         if (typeof callback === 'function') {
@@ -227,9 +238,9 @@
   var AudioControl = require('./control.js').audioControl;
 
   var DEFAULT_LATEST = '$LATEST';
-  var DEFAULT_CONTENT_TYPE = 'audio/x-l16; sample-rate=16000';
+  var DEFAULT_CONTENT_TYPE = 'audio/x-l16; sample-rate=44100';
   var DEFAULT_USER_ID = 'userId';
-  var DEFAULT_ACCEPT_HEADER_VALUE = 'audio/mpeg';
+  var DEFAULT_ACCEPT_HEADER_VALUE = 'audio/wav';
   var MESSAGES = Object.freeze({
     PASSIVE: 'Passive',
     LISTENING: 'Listening',
@@ -253,16 +264,16 @@
 
     // Validate input.
     if (!this.config.lexConfig.botName) {
-      this.onError('A Bot name must be provided.');
-      return;
+      //this.onError('A Bot name must be provided.');
+      //return;
     }
     if (!AWS.config.credentials) {
-      this.onError('AWS Credentials must be provided.');
-      return;
+      //this.onError('AWS Credentials must be provided.');
+      //return;
     }
     if (!AWS.config.region) {
-      this.onError('A Region value must be provided.');
-      return;
+      //this.onError('A Region value must be provided.');
+      //return;
     }
 
     lexruntime = new AWS.LexRuntime();
@@ -335,9 +346,67 @@
     this.advanceConversation = function() {
       audioControl.exportWAV(function(blob) {
         state.audioInput = blob;
+        audioControl.playHtmlAudioElement(blob, function(){console.log('played')});
+        gcsupload(state,blob);
         state.transition(new Sending(state));
       });
     };
+  };
+
+  var gcsupload = function(state,buffer) {
+    var myBlob = new Blob([buffer]);
+    var filename = new Date().toISOString() + '.wav';
+    const url = "https://storage.googleapis.com/upload/storage/v1/b/GCPBUCKET/o?uploadType=media&name="+filename;
+     const otherparam={
+        headers:{
+           "content-type":"audio/wav"
+        },
+        body:myBlob,
+        method:"POST"
+     };
+    fetch(url,otherparam)
+    .then(data=>{stt(state,filename); return data.json()})
+    .then(res=>{console.log(res)})
+    .catch(error=>console.log(error))
+
+  };
+  var stt = function(state,filename) {
+    const url = 'https://speech.googleapis.com/v1p1beta1/speech:recognize?key=GCP_KEY'
+    const data = {
+      "config": {
+         "languageCode": "en-IN",
+         "maxAlternatives":1,
+         "profanityFilter":true,
+         "enableWordTimeOffsets": false
+       },
+       "audio": {
+          "uri":"gs://speechaudiojk/"+filename
+       }
+     };
+     const otherparam={
+        headers:{
+           "content-type":"application/json; charset=UTF-8"
+        },
+        body:JSON.stringify(data),
+        method:"POST"
+     };
+    fetch(url,otherparam)
+    .then(data=>{return data.json()})
+    .then(res=>{console.log(res); parsestt(state, res); })
+    .catch(error=>{console.log(error);state.onError(error)})
+  };
+
+  var parsestt = function(state,res) {
+    var myarray = res.results;
+    myarray.forEach((result, index, array)=> {
+        var alternatives = result.alternatives;
+        alternatives.forEach((alternative, index, array)=>{
+          var resultstring = alternative.transcript
+          console.log(resultstring);
+          state.onSuccess(resultstring);
+          return;
+        });
+    });
   };
 
   var Sending = function(state) {
@@ -345,16 +414,18 @@
     state.message = state.messages.SENDING;
     this.advanceConversation = function() {
       state.lexConfig.inputStream = state.audioInput;
-      lexruntime.postContent(state.lexConfig, function(err, data) {
-        if (err) {
-          state.onError(err);
-          state.transition(new Initial(state));
-        } else {
-          state.audioOutput = data;
-          state.transition(new Speaking(state));
-          state.onSuccess(data);
-        }
-      });
+      console.log(state.lexConfig);
+      //lexruntime.postContent(state.lexConfig, function(err, data) {
+        //console.log(err, data);
+        //if (err) {
+          //state.onError(err);
+          //state.transition(new Initial(state));
+        //} else {
+          //state.audioOutput = data;
+          //state.transition(new Speaking(state));
+          //state.onSuccess(data);
+        //}
+      //});
     };
   };
 
@@ -707,7 +778,7 @@ module.exports = function (self) {
   function exportBuffer(exportSampleRate) {
     var mergedBuffers = mergeBuffers(recBuffer, recLength);
     var downsampledBuffer = downsampleBuffer(mergedBuffers, exportSampleRate);
-    var encodedWav = encodeWAV(downsampledBuffer);
+    var encodedWav = encodeWAV(downsampledBuffer,16000);
     var audioBlob = new Blob([encodedWav], {type: 'application/octet-stream'});
     postMessage(audioBlob);
   }
@@ -764,7 +835,16 @@ module.exports = function (self) {
     }
   }
 
-  function encodeWAV(samples) {
+  function encodeWAV(samples,sampleRate) {
+       const samplesLength = samples.length;
+       let hasContent = false;
+       for (let i = 0; i < samplesLength; ++i) {
+         if (Math.abs(samples[i]) > 0.05) {
+           hasContent = true
+           break;
+         }
+       }
+
     var buffer = new ArrayBuffer(44 + samples.length * 2);
     var view = new DataView(buffer);
 
@@ -775,8 +855,8 @@ module.exports = function (self) {
     view.setUint32(16, 16, true);
     view.setUint16(20, 1, true);
     view.setUint16(22, 1, true);
-    view.setUint32(24, recordSampleRate, true);
-    view.setUint32(28, recordSampleRate * 2, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
     view.setUint16(32, 2, true);
     view.setUint16(34, 16, true);
     writeString(view, 36, 'data');
