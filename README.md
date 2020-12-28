@@ -1,7 +1,7 @@
-# LexAudio
-An example of using the Amazon Lex JavaScript SDK to send and receive audio from the Lex PostContent API. Demonstrates how to capture an audio device, record audio, convert the audio into a format that Lex will recognize, and play the response. All from a web browser.
+# HTML5 Media
+An example of using the HTML media API, Javascript to send and receive audio from the GCP storage/Speech-to-text API. Demonstrates how to capture an audio device, record audio, convert the audio into a format that GCP NLP will recognize, and play the response. All from a web browser.
 
-A companion blog post to the example code can be found [here](https://aws.amazon.com/blogs/ai/capturing-voice-input-in-a-browser/).
+Project is a modification of, blog post to the example code can be found [here](https://aws.amazon.com/blogs/ai/capturing-voice-input-in-a-browser/).
 
 ## Setup
 1. Download and include the AWS JavaScript SDK: 
@@ -15,7 +15,7 @@ A companion blog post to the example code can be found [here](https://aws.amazon
 ```
 ## Usage
 ### Audio control
-The Amazon Lex `audioControl` object provides a convenient API for acquiring a recording device, recording, exporting, and playing back audio. 
+The HTML5 media `audioControl` object provides a convenient API for acquiring a recording device, recording, exporting, and playing back audio. 
 #### Create the audio control
 ``` JavaScript
 var audioControl = new LexAudio.audioControl();
@@ -45,11 +45,8 @@ audioControl.exportWAV(function(blob){
 ```
 
 ### Conversation
-The Amazon Lex `conversation` object provides an abstraction on top of the Amazon Lex Runtime PostContent API and makes it easy to manage conversation state (Passive, Listening, Recording, Speaking) and perform silence detection. It expects `AWS.config.region` and `AWS.config.credentials` to be set.
-#### Set the AWS configuration `region` and `credentials` values  
-```
-AWS.config.region = 'us-east-1';
-AWS.config.credentials = ...;
+The `conversation` object provides an abstraction on top of the GCP API and makes it easy to manage conversation state (Passive, Listening, Recording, Speaking) and perform silence detection.
+
 ```
 #### Create the `conversation` object 
 ```
