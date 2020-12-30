@@ -1,56 +1,23 @@
-# HTML5 Media
-An example of using the HTML media API, Javascript to send and receive audio from the GCP storage/Speech-to-text API. Demonstrates how to capture an audio device, record audio, convert the audio into a format that GCP NLP will recognize, and play the response. All from a web browser.
+# Speech<->Text NLP on browser using Google API
+Record audio using HTML5 media `audioControl` browser API
+Playback recorded audio on browser
+send recorded 16KHz WAV audio to cloud storage
+Transcribe Speech -> text
+Transcribe text -> speech back, MP3 audio
+Play the Mp3 audio buffer on browser
 
-Project is a modification of, blog post to the example code can be found [here](https://aws.amazon.com/blogs/ai/capturing-voice-input-in-a-browser/).
 
 ## Setup
-1. Download and include the AWS JavaScript SDK: 
-   * http://aws.amazon.com/sdk-for-browser/
-2. Download and include the Amazon Lex Audio SDK for JavaScript:
-   * /dist/aws-lex-audio.min.js
-  
-```
-    <script src="/js/aws-sdk.min.js"></script>
-    <script src="/js/aws-lex-audio.min.js"></script>
-```
+
 ## Demo
 https://aqueous-dawn-66602.herokuapp.com/example/index.html
 
 ## Usage
-### Audio control
-The HTML5 media `audioControl` object provides a convenient API for acquiring a recording device, recording, exporting, and playing back audio. 
-#### Create the audio control
-``` JavaScript
-var audioControl = new LexAudio.audioControl();
-```
 
-#### Record audio
-``` JavaScript
-audioControl.startRecording();
-```
-
-#### Stop recording
-``` JavaScript
-audioControl.stopRecording();
-```
-
-#### Export and playback
-``` JavaScript
-audioControl.exportWAV(function(blob){
-  audioControl.play(blob);
-});
-```
-You can specify the export sample rate in Hz. 16000 Hz is the default if no value is provided. Note, the Amazon Lex Runtime API accepts 16kHz or 8kHz.
-``` JavaScript
-audioControl.exportWAV(function(blob){
-  audioControl.play(blob);
-}, 44100);
-```
 
 ### Conversation
 The `conversation` object provides an abstraction on top of the GCP API and makes it easy to manage conversation state (Passive, Listening, Recording, Speaking) and perform silence detection.
 
-```
 #### Create the `conversation` object 
 ```
 var conversation = new LexAudio.conversation({lexConfig:{botName: 'BOT_NAME'}}, 
@@ -67,7 +34,7 @@ function (timeDomain) { // Called with audio time domain data (useful for render
 ```
 conversation.advanceConversation();
 ```
-Advances the conversation from Passive to Listening. By default, silence detection will be used to transition to Sending and the conversation will continue Listenting, Sending, and Speaking until the Dialog state is [Fulfilled](http://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostContent.html#API_runtime_PostContent_ResponseSyntax), [ReadyForFulfillment](http://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostContent.html#API_runtime_PostContent_ResponseSyntax), or [Failed](http://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostContent.html#API_runtime_PostContent_ResponseSyntax). Here are the conversation state transitions. 
+Advances the conversation from Passive to Listening. By default, silence detection will be used to transition to Sending and the conversation will continue Listenting, Sending, and Speaking until the Dialog state is [Fulfilled] Here are the conversation state transitions. 
 
 ```
                                        onPlaybackComplete and ElicitIntent | ConfirmIntent | ElicitSlot
