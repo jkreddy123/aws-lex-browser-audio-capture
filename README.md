@@ -13,6 +13,9 @@ Project is a modification of, blog post to the example code can be found [here](
     <script src="/js/aws-sdk.min.js"></script>
     <script src="/js/aws-lex-audio.min.js"></script>
 ```
+## Demo
+https://aqueous-dawn-66602.herokuapp.com/example/index.html
+
 ## Usage
 ### Audio control
 The HTML5 media `audioControl` object provides a convenient API for acquiring a recording device, recording, exporting, and playing back audio. 
