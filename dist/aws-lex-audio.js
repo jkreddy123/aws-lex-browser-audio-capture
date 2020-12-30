@@ -346,8 +346,9 @@
     this.advanceConversation = function() {
       audioControl.exportWAV(function(blob) {
         state.audioInput = blob;
-        audioControl.playHtmlAudioElement(blob, function(){console.log('played')});
+        //audioControl.playHtmlAudioElement(blob, function(){console.log('played')});
         gcsupload(state,blob);
+        //tts(state)
         state.transition(new Sending(state));
       });
     };
@@ -356,7 +357,7 @@
   var gcsupload = function(state,buffer) {
     var myBlob = new Blob([buffer]);
     var filename = new Date().toISOString() + '.wav';
-    const url = "https://storage.googleapis.com/upload/storage/v1/b/GCPBUCKET/o?uploadType=media&name="+filename;
+    const url = "https://storage.googleapis.com/upload/storage/v1/b/speechaudiojk/o?uploadType=media&name="+filename;
      const otherparam={
         headers:{
            "content-type":"audio/wav"
@@ -371,7 +372,7 @@
 
   };
   var stt = function(state,filename) {
-    const url = 'https://speech.googleapis.com/v1p1beta1/speech:recognize?key=GCP_KEY'
+    const url = 'https://speech.googleapis.com/v1p1beta1/speech:recognize?key=AIzaSyBC1WdnoaVTHI1O_zM4Sc28ycHgu6ndOSw'
     const data = {
       "config": {
          "languageCode": "en-IN",
@@ -392,23 +393,76 @@
      };
     fetch(url,otherparam)
     .then(data=>{return data.json()})
-    .then(res=>{console.log(res); parsestt(state, res); })
+    .then(res=>{console.log(res); var stt_msg = parsestt(state, res); tts(state,stt_msg);})
     .catch(error=>{console.log(error);state.onError(error)})
   };
 
   var parsestt = function(state,res) {
     var myarray = res.results;
+    var resultstring
     myarray.forEach((result, index, array)=> {
         var alternatives = result.alternatives;
         alternatives.forEach((alternative, index, array)=>{
-          var resultstring = alternative.transcript
+          resultstring = alternative.transcript
           console.log(resultstring);
           state.onSuccess(resultstring);
-          return;
         });
     });
+    return resultstring;
   };
 
+  var tts = function(state,text_msg) {
+    const url = 'https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=AIzaSyBC1WdnoaVTHI1O_zM4Sc28ycHgu6ndOSw'
+    const data = {
+      'input':{
+         'text':text_msg
+      },
+      'voice':{
+         'languageCode':'en-gb',
+         'name':'en-GB-Standard-A',
+         'ssmlGender':'FEMALE'
+      },
+      'audioConfig':{
+      'audioEncoding':'MP3'
+      }
+     };
+     const otherparam={
+        headers:{
+           "content-type":"application/json; charset=UTF-8"
+        },
+        body:JSON.stringify(data),
+        method:"POST"
+     };
+    fetch(url,otherparam)
+    .then(data=>{return data.json()})
+    .then(res=>{console.log(res.audioContent);  playOutput(res.audioContent); })
+    .catch(error=>{console.log(error);state.onError(error)})
+  };
+
+function playOutput(base64_string){
+ let audioContext = new AudioContext();
+ let outputSource;
+ var typedArray = Uint8Array.from(atob(base64_string), c => c.charCodeAt(0));
+ var arrayBuffer = typedArray.buffer;
+ try {
+     if(arrayBuffer.byteLength > 0){
+         audioContext.decodeAudioData(arrayBuffer,
+         function(buffer){
+             // 3)
+             audioContext.resume();
+             outputSource = audioContext.createBufferSource();
+             outputSource.connect(audioContext.destination);
+             outputSource.buffer = buffer;
+             outputSource.start(0);
+         },
+         function(){
+             console.log(arguments);
+         });
+     }
+ } catch(e) {
+     console.log(e);
+ }
+};
   var Sending = function(state) {
     this.state = state;
     state.message = state.messages.SENDING;
