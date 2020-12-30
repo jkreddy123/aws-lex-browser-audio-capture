@@ -1,10 +1,10 @@
 # Speech<->Text NLP on browser using Google API
--Record audio using HTML5 media `audioControl` browser API
--Playback recorded audio on browser
--send recorded 16KHz WAV audio to cloud storage
--Transcribe Speech -> text
--Transcribe text -> speech back, MP3 audio
--Play the Mp3 audio buffer on browser
+- Record audio using HTML5 media `audioControl` browser API
+- Playback recorded audio on browser
+- send recorded 16KHz WAV audio to cloud storage
+- Transcribe Speech -> text
+- Transcribe text -> speech back, MP3 audio
+- Play the Mp3 audio buffer on browser
 
 
 ## Setup
