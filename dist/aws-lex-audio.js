@@ -357,7 +357,7 @@
   var gcsupload = function(state,buffer) {
     var myBlob = new Blob([buffer]);
     var filename = new Date().toISOString() + '.wav';
-    const url = "https://storage.googleapis.com/upload/storage/v1/b/speechaudiojk/o?uploadType=media&name="+filename;
+    const url = "https://storage.googleapis.com/upload/storage/v1/b/GCPBUCKET/o?uploadType=media&name="+filename;
      const otherparam={
         headers:{
            "content-type":"audio/wav"
@@ -372,7 +372,7 @@
 
   };
   var stt = function(state,filename) {
-    const url = 'https://speech.googleapis.com/v1p1beta1/speech:recognize?key=AIzaSyBC1WdnoaVTHI1O_zM4Sc28ycHgu6ndOSw'
+    const url = 'https://speech.googleapis.com/v1p1beta1/speech:recognize?key=GCPKEY'
     const data = {
       "config": {
          "languageCode": "en-IN",
@@ -412,7 +412,7 @@
   };
 
   var tts = function(state,text_msg) {
-    const url = 'https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=AIzaSyBC1WdnoaVTHI1O_zM4Sc28ycHgu6ndOSw'
+    const url = 'https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=GCPKEY'
     const data = {
       'input':{
          'text':text_msg
