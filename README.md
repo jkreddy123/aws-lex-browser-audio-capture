@@ -3,6 +3,7 @@
 - Playback recorded audio on browser
 - send recorded 16KHz WAV audio to cloud storage
 - Transcribe Speech -> text
+- Use DialogFlow to get intent and derive fulfillment text
 - Transcribe text -> speech back, MP3 audio
 - Play the Mp3 audio buffer on browser
 
