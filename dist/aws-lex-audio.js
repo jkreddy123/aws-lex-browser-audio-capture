@@ -357,7 +357,7 @@
   var gcsupload = function(state,buffer) {
     var myBlob = new Blob([buffer]);
     var filename = new Date().toISOString() + '.wav';
-    const url = "https://storage.googleapis.com/upload/storage/v1/b/GCPBUCKET/o?uploadType=media&name="+filename;
+    const url = "https://storage.googleapis.com/upload/storage/v1/b/"+GCPBUCKET+"/o?uploadType=media&name="+filename;
      const otherparam={
         headers:{
            "content-type":"audio/wav"
@@ -372,7 +372,7 @@
 
   };
   var stt = function(state,filename) {
-    const url = 'https://speech.googleapis.com/v1p1beta1/speech:recognize?key=GCPKEY'
+    const url = 'https://speech.googleapis.com/v1p1beta1/speech:recognize?key='+API_KEY
     const data = {
       "config": {
          "languageCode": "en-IN",
@@ -412,13 +412,13 @@
   };
 
   var tts = function(state,text_msg) {
-    const url = 'https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=GCPKEY'
+    const url = 'https://texttospeech.googleapis.com/v1beta1/text:synthesize?key='+ API_KEY
     const data = {
       'input':{
          'text':text_msg
       },
       'voice':{
-         'languageCode':'en-gb',
+         'languageCode':'en-IN',
          'name':'en-GB-Standard-A',
          'ssmlGender':'FEMALE'
       },
@@ -435,7 +435,7 @@
      };
     fetch(url,otherparam)
     .then(data=>{return data.json()})
-    .then(res=>{console.log(res.audioContent);  playOutput(res.audioContent); })
+    .then(res=>{console.log(res.audioContent);  playOutput(res.audioContent); dialog(state,text_msg);})
     .catch(error=>{console.log(error);state.onError(error)})
   };
 
@@ -463,6 +463,99 @@ function playOutput(base64_string){
      console.log(e);
  }
 };
+
+  var dialog = function(state,text_msg) {
+    //var jwt = getJWT();
+    const url = 'https://dialogflow.googleapis.com/v2/projects/'+PROJECT_ID+'/agent/sessions/123456:detectIntent?key='+API_KEY
+    const data = {
+        "queryInput": {
+           "text": {"text": text_msg,
+                    "languageCode": 'en-IN' 
+                   }
+        },
+       
+     };
+
+    var token;
+    postJWT(getJWT(), function(response){
+      token = JSON.parse(response).access_token;
+      const otherparam={
+        headers:{
+           "Authorization": "Bearer " + token,
+           "content-type":"application/json; charset=UTF-8"
+        },
+        body:JSON.stringify(data),
+        method:"POST"
+      };
+
+     fetch(url,otherparam)
+     .then(data=>{return data.json()})
+     .then(res=>{console.log(res); })
+     .catch(error=>{console.log(error);state.onError(error)})
+    });
+    console.log(token);
+    
+  };
+
+function postJWT(jwt, callback) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+        if (this.readyState == 4) {
+            if (this.status == 200 && callback) {
+                callback(this.responseText);
+                console.log(this.responseText);
+                return;
+            }
+            if (console) console.log(this.responseText);
+        }
+    };
+    var parameters = "grant_type=" + encodeURIComponent("urn:ietf:params:oauth:grant-type:jwt-bearer") + "&assertion=" + encodeURIComponent(jwt);
+    xhttp.open("POST", "https://www.googleapis.com/oauth2/v4/token", true);
+    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhttp.send(parameters);
+}
+
+function getCert() {
+    var cert = //your json key (downloaded earlier) goes here
+     {
+        "type": "service_account",
+  	"project_id": PROJECT_ID,
+  	"private_key_id": PRIVATE_KEY_ID,
+  	"private_key": PRIVATE_KEY,
+  	"client_email": CLIENT_EMAIL,
+  	"client_id": CLIENT_ID,
+  	"auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  	"token_uri": "https://oauth2.googleapis.com/token",
+  	"auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  	"client_x509_cert_url": CLIENT_X509_CERT_URL
+     };      
+    return cert;
+}
+function getJWT() {
+
+    var imported = document.createElement('script');
+    imported.src = 'jsrsasign-all-min.js';
+    document.head.appendChild(imported);
+
+    var cert = getCert();
+    var key = KEYUTIL.getKey(cert.private_key);
+    var headers = { "alg": "RS256", "typ": "JWT" };
+    var issued = Math.floor(new Date().getTime()/1000);
+
+    var claims = {
+        "iss": cert.client_email,
+        "scope": "https://www.googleapis.com/auth/dialogflow",
+        "aud": "https://www.googleapis.com/oauth2/v4/token",
+        "exp": issued + 3600,
+        "iat": issued
+    };
+
+    var jwt = KJUR.jws.JWS.sign(headers.alg, headers, JSON.stringify(claims), key);
+    return jwt;
+}
+
+
+
   var Sending = function(state) {
     this.state = state;
     state.message = state.messages.SENDING;
