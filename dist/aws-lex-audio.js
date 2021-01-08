@@ -381,7 +381,7 @@
          "enableWordTimeOffsets": false
        },
        "audio": {
-          "uri":"gs://speechaudiojk/"+filename
+          "uri":'gs://'+GCPBUCKET+'/'+filename
        }
      };
      const otherparam={
@@ -393,7 +393,7 @@
      };
     fetch(url,otherparam)
     .then(data=>{return data.json()})
-    .then(res=>{console.log(res); var stt_msg = parsestt(state, res); tts(state,stt_msg);})
+    .then(res=>{console.log(res); var stt_msg = parsestt(state, res); dialog(state,stt_msg);})
     .catch(error=>{console.log(error);state.onError(error)})
   };
 
@@ -435,7 +435,7 @@
      };
     fetch(url,otherparam)
     .then(data=>{return data.json()})
-    .then(res=>{console.log(res.audioContent);  playOutput(res.audioContent); dialog(state,text_msg);})
+    .then(res=>{console.log(res.audioContent);  playOutput(res.audioContent); })
     .catch(error=>{console.log(error);state.onError(error)})
   };
 
@@ -466,7 +466,7 @@ function playOutput(base64_string){
 
   var dialog = function(state,text_msg) {
     //var jwt = getJWT();
-    const url = 'https://dialogflow.googleapis.com/v2/projects/'+PROJECT_ID+'/agent/sessions/123456:detectIntent?key='+API_KEY
+    const url = 'https://dialogflow.googleapis.com/v2beta1/projects/'+PROJECT_ID+'/agent/sessions/123456:detectIntent?key='+API_KEY
     const data = {
         "queryInput": {
            "text": {"text": text_msg,
@@ -490,7 +490,7 @@ function playOutput(base64_string){
 
      fetch(url,otherparam)
      .then(data=>{return data.json()})
-     .then(res=>{console.log(res); })
+     .then(res=>{console.log(res.queryResult.fulfillmentText); tts(state,res.queryResult.fulfillmentText) })
      .catch(error=>{console.log(error);state.onError(error)})
     });
     console.log(token);
