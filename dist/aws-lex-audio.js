@@ -435,7 +435,7 @@
      };
     fetch(url,otherparam)
     .then(data=>{return data.json()})
-    .then(res=>{console.log(res.audioContent);  playOutput(res.audioContent); })
+    .then(res=>{playOutput(res.audioContent); })
     .catch(error=>{console.log(error);state.onError(error)})
   };
 
@@ -490,12 +490,26 @@ function playOutput(base64_string){
 
      fetch(url,otherparam)
      .then(data=>{return data.json()})
-     .then(res=>{console.log(res.queryResult.fulfillmentText); tts(state,res.queryResult.fulfillmentText) })
+     .then(res=>{console.log(res.queryResult); var dialog_msg = parseDialog(state, res.queryResult.fulfillmentMessages); tts(state,dialog_msg) })
      .catch(error=>{console.log(error);state.onError(error)})
     });
     console.log(token);
     
   };
+
+  function parseDialog(state,msgArray){
+    var resultstring
+    msgArray.forEach((result, index, array)=> {
+        var alternatives = result.text.text;
+        alternatives.forEach((alternative, index, array)=>{
+          resultstring = alternative
+          console.log(resultstring);
+          state.onSuccess(resultstring);
+        });
+    });
+    return resultstring;
+
+  }
 
 function postJWT(jwt, callback) {
     var xhttp = new XMLHttpRequest();
