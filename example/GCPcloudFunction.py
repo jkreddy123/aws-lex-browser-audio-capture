@@ -15,6 +15,9 @@ def hello_world(request):
     request_json = {}
     queryResult = {}
     firstelement =[]
+    multiplier = multiplicand = answer = 1
+    fromtable = 2
+    uptotable = 20
     print("request type", type(request))
     request_json = json.loads(request.data)
     print("request json type", type(request_json))
@@ -32,8 +35,8 @@ def hello_world(request):
       uptotable = firstelement['parameters']['uptotable']
       fromtable = firstelement['parameters']['fromtable']
     if 'multiplier' in firstelement['parameters'] :
-      multiplier = firstelement['parameters']['multiplier']
-      multiplicand = firstelement['parameters']['multiplicand']
+      multiplier = int(firstelement['parameters']['multiplier'])
+      multiplicand = int(firstelement['parameters']['multiplicand'])
       answer = firstelement['parameters']['answer']
     parametersdict = {
       	  "multiplier": multiplier,
@@ -43,9 +46,9 @@ def hello_world(request):
           "fromtable": fromtable
     }
     if(queryResult['action'] == 'genMultiplicationDummyAction'):
-      multiplier = random.randint(int(fromtable),int(uptotable))
-      multiplicand = random.randint(0,10)    
-      followupEvent = "genMultiplicationDummyEvent"
+      multiplier = int(random.randint(int(fromtable),int(uptotable)))
+      multiplicand = int(random.randint(0,10))    
+      followupEvent = "askMultiplicationEvent"
       parametersdict = {
       	  "multiplier": multiplier,
           "multiplicand": multiplicand,
@@ -62,7 +65,7 @@ def hello_world(request):
         }
       }
     elif(queryResult['action'] == 'askMultiplicationAction'):
-      responsetext = "what is"+ str(multiplier) + " "+ str(multiplicand) +"s are?"
+      responsetext = "what is "+ str(multiplier) + " "+ str(multiplicand) +"s are?"
       WebhookResponse = {
        "fulfillmentMessages": [
         { "text": {"text": [ responsetext ] } }
@@ -70,7 +73,7 @@ def hello_world(request):
       }
       print("askMultiplicationAction  ", multiplier, multiplicand, responsetext)
     elif (queryResult['action'] == 'checkAnswerDummyAction'):
-      if int(uptotable) * int(fromtable) == answer :
+      if int(multiplier) * int(multiplicand) == answer :
         responsetext = "right answer"
         followupEvent = "genMultiplicationDummyEvent"
       else:
@@ -94,4 +97,3 @@ def hello_world(request):
     else:
       print("no action ")
     return json.dumps(WebhookResponse)
-
