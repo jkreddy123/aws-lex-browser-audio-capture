@@ -87,7 +87,7 @@ def hello_world(request):
         }
       }      
     elif(queryResult['action'] == 'tryAnswerAgainAction'):
-      responsetext = "Wrong Answer. Train again."
+      responsetext = "Wrong Answer. Try again."
       WebhookResponse = {
        "fulfillmentMessages": [
         { "text": {"text": [ responsetext ] } }
