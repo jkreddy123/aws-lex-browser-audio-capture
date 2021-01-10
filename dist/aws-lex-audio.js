@@ -490,7 +490,7 @@ function playOutput(base64_string){
 
      fetch(url,otherparam)
      .then(data=>{return data.json()})
-     .then(res=>{console.log(res.queryResult); var dialog_msg = parseDialog(state, res.queryResult.fulfillmentMessages); tts(state,dialog_msg) })
+     .then(res=>{console.log(res.queryResult); displayTip(state,res.queryResult.action); var dialog_msg = parseDialog(state, res.queryResult.fulfillmentMessages); tts(state,dialog_msg) })
      .catch(error=>{console.log(error);state.onError(error)})
     });
     console.log(token);
@@ -510,7 +510,28 @@ function playOutput(base64_string){
     return resultstring;
 
   }
-
+  function displayTip(state,action){
+    if(action == "input.welcome"){
+        var tip = document.getElementById('tip');
+        tip.textContent = 'TIP to say something: ask tables OR ask me tables upto 15';
+    }
+    if(action == "askTables"){
+        var tip = document.getElementById('tip');
+        tip.textContent = 'TIP to say something: ok OR yes OR fine';
+    } 
+    if(action == "askMultiplicationAction"){
+        var tip = document.getElementById('tip');
+        tip.textContent = 'TIP to say something: 20 OR i dont know OR skip';
+    }   
+    if(action == "tryAnswerAgainAction"){
+        var tip = document.getElementById('tip');
+        tip.textContent = 'TIP to say something: 20 OR i dont know OR skip';
+    }       
+    if(action == "input.unknown"){
+        var tip = document.getElementById('tip');
+        tip.textContent = 'TIP to say something: 20 OR i dont know OR skip OR start over';
+    }               
+  }
 function postJWT(jwt, callback) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
