@@ -7,6 +7,7 @@
     <meta name="author" content="JK">
     <meta name="description" content="Colors Software speech to text project">
     <meta name="keywords" content="speech to text, cloud, api, machine learning NLP project">
+    <meta name="google-signin-client_id" content="55325708385-g9gpgm9k6jouunhn6bc0suqfa6tu5v9f.apps.googleusercontent.com">
     <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32"/>
     <link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16"/>
     <link rel="stylesheet" href="style.css">
@@ -18,6 +19,7 @@
         <img src="mic.png">
         <canvas class="visualizer"></canvas>
     </p>
+    <div class="g-signin2" data-onsuccess="onSignIn"></div>
     <p><span id="message"></span></p>
     <p><span id="transcribedmsg"></span></p>
 
@@ -37,6 +39,7 @@
     </div>
 <script src="constants.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/8.0.20/jsrsasign-all-min.js"></script>
+<script src="https://apis.google.com/js/platform.js" async defer></script>
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.48.0.min.js"></script>
 <script src="../dist/aws-lex-audio.js" type="text/javascript"></script>
 <script src="https://apis.google.com/js/api.js"></script>
@@ -77,7 +80,13 @@
         });
         conversation.advanceConversation();
     };
-
+   function onSignIn(googleUser) {
+      var profile = googleUser.getBasicProfile();
+      console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+      console.log('Name: ' + profile.getName());
+      console.log('Image URL: ' + profile.getImageUrl());
+      console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+   }
 </script>
 
 </body>
