@@ -1,3 +1,17 @@
+def  quickstart_add_data_two():
+    from google.cloud import firestore
+    db = firestore.Client()
+    # [START quickstart_add_data_two]
+    # [START firestore_setup_dataset_pt2]
+    doc_ref = db.collection(u'tableQuestions').document(u'aturing')
+    doc_ref.set({
+        u'first': u'Alan',
+        u'middle': u'Mathison',
+        u'last': u'Turing',
+        u'born': 1912
+    })
+
+
 def hello_world(request):
     """Responds to any HTTP request.
     Args:
@@ -9,7 +23,7 @@ def hello_world(request):
     """
     import json
     import random
-    
+
     
     print(request)
     request_json = {}
@@ -76,6 +90,7 @@ def hello_world(request):
       if int(multiplier) * int(multiplicand) == answer :
         responsetext = "right answer"
         followupEvent = "genMultiplicationDummyEvent"
+        quickstart_add_data_two()
       else:
         responsetext = "wrong answer"
         followupEvent = "tryAnswerAgainEvent"
@@ -97,3 +112,4 @@ def hello_world(request):
     else:
       print("no action ")
     return json.dumps(WebhookResponse)
+    
