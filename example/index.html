@@ -16,24 +16,20 @@
 <body class="wrapper">
 <div class="audio-control">
     <p id="audio-control" class="white-circle">
-        <img src="mic.png">
+
         <canvas class="visualizer"></canvas>
     </p>
-    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+
     <p><span id="message"></span></p>
     <p><span id="transcribedmsg"></span></p>
 
-    <!--p>
-        <input type="password" id="ACCESS_ID" name="ACCESS ID" placeholder="ACCESS ID" value=""/>
-    </p>
-    <p>
-        <input type="password" id="SECRET_KEY" name="SECRET KEY" placeholder="SECRET KEY" value=""/>
-    </p>
-    <p>
-        <input type="text" id="BOT" name="BOT" placeholder="BOT" value=""/>
-    </p-->
+    <div class="profilepic">
+        <img src="mic.png" id="profilepic">
+    </div>
+
 </div>
-      <div id="formats"></div>
+    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+    <div id="formats"></div>
     	<p><span id="tip"></span></p>
     	<ol id="recordingsList"></ol>
     </div>
@@ -50,6 +46,7 @@
     var waveform = window.Waveform();
     var message = document.getElementById('message');
     var config, conversation;
+    var userdata;
     message.textContent = 'Passive';
 
     document.getElementById('audio-control').onclick = function () {
@@ -58,7 +55,8 @@
         //AWS.config.region = 'us-east-1';
         
         config = {
-            lexConfig: { botName: "jk"}//document.getElementById('BOT').value }
+            lexConfig: { botName: "jk"},//document.getElementById('BOT').value }
+            profile: userdata
         };
 
         conversation = new LexAudio.conversation(config, function (state) {
@@ -86,7 +84,30 @@
       console.log('Name: ' + profile.getName());
       console.log('Image URL: ' + profile.getImageUrl());
       console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+      document.getElementById("profilepic").src = profile.getImageUrl();
+      document.getElementsByClassName("g-signin2")[0].style.visibility = "hidden";
+      usersignedin(profile);
    }
+    var usersignedin = function(profile) {
+    const url = 'https://us-central1-mlkaggle-288509.cloudfunctions.net/usersignedin'
+    userdata = {
+        'ID': profile.getId(),
+        'Name': profile.getName(),
+        'ImageURL': profile.getImageUrl(),
+        'Email': profile.getEmail()
+    };
+     const otherparam={
+        headers:{
+           'content-type':'application/json',
+        },
+        body:JSON.stringify(userdata),
+        method:"POST"
+     };
+    fetch(url,otherparam)
+    .then(data=>{console.log(data)})
+    .then(res=>{console.log(res);})
+    .catch(error=>{console.log(error);})
+  };
 </script>
 
 </body>
