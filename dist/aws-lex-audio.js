@@ -356,7 +356,8 @@
 
   var gcsupload = function(state,buffer) {
     var myBlob = new Blob([buffer]);
-    var filename = new Date().toISOString() + '.wav';
+    var presenttime = new Date().toISOString();
+    var filename = state.config.profile.ID + "-" + presenttime + '.wav';
     const url = "https://storage.googleapis.com/upload/storage/v1/b/"+GCPBUCKET+"/o?uploadType=media&name="+filename;
      const otherparam={
         headers:{
@@ -393,7 +394,7 @@
      };
     fetch(url,otherparam)
     .then(data=>{return data.json()})
-    .then(res=>{console.log(res); var stt_msg = parsestt(state, res); dialog(state,stt_msg);})
+    .then(res=>{console.log(res); var stt_msg = parsestt(state, res); dialog(state,stt_msg,filename);})
     .catch(error=>{console.log(error);state.onError(error)})
   };
 
@@ -464,7 +465,7 @@ function playOutput(base64_string){
  }
 };
 
-  var dialog = function(state,text_msg) {
+  var dialog = function(state,text_msg,audio_file_url) {
     //var jwt = getJWT();
     const url = 'https://dialogflow.googleapis.com/v2beta1/projects/'+PROJECT_ID+'/agent/sessions/123456:detectIntent?key='+API_KEY
     const data = {
@@ -473,7 +474,15 @@ function playOutput(base64_string){
                     "languageCode": 'en-IN' 
                    }
         },
-       
+       "queryParams":{
+            "payload":  jsonToStructProto(state.config.profile),
+            "webhookHeaders": {
+    		'userID': state.config.profile.ID,
+    		'Name': state.config.profile.Name,
+        	'audioURL': audio_file_url,
+        	'textmsg': text_msg
+  	}
+       }
      };
 
     var token;
@@ -589,7 +598,48 @@ function getJWT() {
     return jwt;
 }
 
+function jsonToStructProto(json) {
+  const fields = {};
+  for (let k in json) {
+    fields[k] = jsonValueToProto(json[k]);
+  }
 
+  return {fields};
+}
+
+const JSON_SIMPLE_TYPE_TO_PROTO_KIND_MAP = {
+  [typeof 0]: 'numberValue',
+  [typeof '']: 'stringValue',
+  [typeof false]: 'boolValue',
+};
+
+const JSON_SIMPLE_VALUE_KINDS = new Set([
+  'numberValue',
+  'stringValue',
+  'boolValue',
+]);
+
+function jsonValueToProto(value) {
+  const valueProto = {};
+
+  if (value === null) {
+    valueProto.kind = 'nullValue';
+    valueProto.nullValue = 'NULL_VALUE';
+  } else if (value instanceof Array) {
+    valueProto.kind = 'listValue';
+    valueProto.listValue = {values: value.map(jsonValueToProto)};
+  } else if (typeof value === 'object') {
+    valueProto.kind = 'structValue';
+    valueProto.structValue = jsonToStructProto(value);
+  } else if (typeof value in JSON_SIMPLE_TYPE_TO_PROTO_KIND_MAP) {
+    const kind = JSON_SIMPLE_TYPE_TO_PROTO_KIND_MAP[typeof value];
+    valueProto.kind = kind;
+    valueProto[kind] = value;
+  } else {
+    console.warn('Unsupported value type ', typeof value);
+  }
+  return valueProto;
+}
 
   var Sending = function(state) {
     this.state = state;
