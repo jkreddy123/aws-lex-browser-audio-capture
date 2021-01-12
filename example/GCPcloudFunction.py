@@ -1,14 +1,12 @@
-def  quickstart_add_data_two():
+def  quickstart_add_data_two(multiplier,multiplicand,answer,headers):
     from google.cloud import firestore
     db = firestore.Client()
-    # [START quickstart_add_data_two]
-    # [START firestore_setup_dataset_pt2]
-    doc_ref = db.collection(u'tableQuestions').document(u'aturing')
+    doc_ref = db.collection(u'tableQuestions').document(headers['audioURL'])
     doc_ref.set({
-        u'first': u'Alan',
-        u'middle': u'Mathison',
-        u'last': u'Turing',
-        u'born': 1912
+        u'userID': headers['userID'],
+        u'answer': headers['textmsg'],
+        u'multiplier': multiplier,
+        u'multiplicand': multiplicand
     })
 
 
@@ -33,6 +31,7 @@ def hello_world(request):
     fromtable = 2
     uptotable = 20
     print("request type", type(request))
+    print("request headers", request.headers)
     request_json = json.loads(request.data)
     print("request json type", type(request_json))
     print(request_json['queryResult'])
@@ -90,7 +89,7 @@ def hello_world(request):
       if int(multiplier) * int(multiplicand) == answer :
         responsetext = "right answer"
         followupEvent = "genMultiplicationDummyEvent"
-        quickstart_add_data_two()
+        quickstart_add_data_two(multiplier,multiplicand,answer,request.headers)
       else:
         responsetext = "wrong answer"
         followupEvent = "tryAnswerAgainEvent"
@@ -112,4 +111,3 @@ def hello_world(request):
     else:
       print("no action ")
     return json.dumps(WebhookResponse)
-    
